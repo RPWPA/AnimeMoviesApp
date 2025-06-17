@@ -8,29 +8,34 @@ function App() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [animeMovies, setAnimeMovies] = useState<IMovie[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isloading, setIsloading] = useState<boolean>(true);
 
   const errRef = useRef<HTMLDivElement>(null); // Optional typing
 
-useEffect(() => {
-  const fetchAnimeMovies = async () => {
-    try {
-      const res = await fetch("https://api.jikan.moe/v4/anime?type=movie");
+  useEffect(() => {
+    const fetchAnimeMovies = async () => {
+      try {
+        const res = await fetch("https://api.jikan.moe/v4/anime?type=movie");
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! Status: ${res.status}`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log(data)
+        setAnimeMovies(data.data);
+        setIsloading(false)
       }
+      catch (err: any) {
+        console.error(err);
+        setErrorMessage(err.message || "Something went wrong");
+        errRef.current?.focus();
+        setIsloading(false)
+      }
+    };
 
-      const data = await res.json();
-      setAnimeMovies(data.data);
-    } catch (err: any) {
-      console.error(err);
-      setErrorMessage(err.message || "Something went wrong");
-      errRef.current?.focus();
-    }
-  };
-
-  fetchAnimeMovies();
-}, []);
+    fetchAnimeMovies();
+  }, []);
 
   return (
     <main>
@@ -44,17 +49,21 @@ useEffect(() => {
 
         <section className='all-movies'>
           <h2>All Movies</h2>
-          {errorMessage ? <p className='text-red-500' ref={errRef}>Error message: {errorMessage}</p> : null}
-          {
-            animeMovies.length > 0
-              ? animeMovies.map(movie => (
-                <Movie key={movie.title} movie={movie} />
-              ))
-              : null
+          {isloading ? "Loading..." :
+            <>
+              {errorMessage ? <p className='text-red-500' ref={errRef}>Error message: {errorMessage}</p> : null}
+              {
+                animeMovies.length > 0
+                  ? animeMovies.map(movie => (
+                    <Movie key={movie.title} movie={movie} />
+                  ))
+                  : null
+              }
+            </>
           }
         </section>
       </div>
-    </main>
+    </main >
   )
 }
 
