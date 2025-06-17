@@ -12,30 +12,36 @@ function App() {
 
   const errRef = useRef<HTMLDivElement>(null); // Optional typing
 
+
   useEffect(() => {
-    const fetchAnimeMovies = async () => {
-      try {
-        const res = await fetch("https://api.jikan.moe/v4/anime?type=movie");
+  const fetchAnimeMovies = async () => {
+    try {
+      const res = await fetch("https://api.jikan.moe/v4/anime?type=movie");
 
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-
-        const data = await res.json();
-        console.log(data)
-        setAnimeMovies(data.data);
-        setIsloading(false)
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
       }
-      catch (err: any) {
-        console.error(err);
-        setErrorMessage(err.message || "Something went wrong");
-        errRef.current?.focus();
-        setIsloading(false)
-      }
-    };
 
-    fetchAnimeMovies();
-  }, []);
+      const data = await res.json();
+      console.log(data);
+
+      // ✅ Filter out R and R+ rated movies
+      const safeMovies = data.data.filter((movie: IMovie) =>
+        !movie.rating?.startsWith("R")
+      );
+
+      setAnimeMovies(safeMovies);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage(err.message || "Something went wrong");
+      errRef.current?.focus();
+    } finally {
+      setIsloading(false);
+    }
+  };
+
+  fetchAnimeMovies();
+}, []);
 
   return (
     <main>
