@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import Search from './components/search/search'
 import Movie from './components/movie/movie';
@@ -7,6 +7,10 @@ import type { IMovie } from './interfaces/Imovie';
 function App() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [animeMovies, setAnimeMovies] = useState<IMovie[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
+  const errRef = useRef<HTMLDivElement>(null); // Optional typing
+
   useEffect(() => {
     fetch("https://api.jikan.moe/v4/anime?type=movie")
       .then(res => res.json())
@@ -16,6 +20,8 @@ function App() {
       })
       .catch(err => {
         console.log(err);
+        setErrorMessage(err.message)
+        errRef.current?.focus()
       })
   }, [])
 
@@ -29,6 +35,7 @@ function App() {
         </header>
         <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         <h1>{searchTerm}</h1>
+        {errorMessage ? <div ref={errRef}>Error message: {errorMessage}</div> : null}
         {
           animeMovies.length > 0
             ? animeMovies.map(movie => (
