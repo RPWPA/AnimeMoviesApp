@@ -11,8 +11,21 @@ function App() {
   const [isloading, setIsloading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 
   const errRef = useRef<HTMLDivElement>(null); // Optional typing
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // ⏱ 0.5 seconds debounce
+
+    // Cleanup timeout if user types again before 500ms
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
 
 
   useEffect(() => {
@@ -20,8 +33,9 @@ function App() {
       try {
         setIsloading(true);
 
-        // 🔍 If there's a search term, use it in the query
-        const searchQuery = searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : "";
+        const searchQuery = debouncedSearchTerm
+          ? `&q=${encodeURIComponent(debouncedSearchTerm)}`
+          : "";
 
         const res = await fetch(
           `https://api.jikan.moe/v4/anime?type=movie&page=${currentPage}${searchQuery}`
@@ -34,7 +48,6 @@ function App() {
         const data = await res.json();
         console.log(data);
 
-        // 🚫 Filter out R and R+ movies
         const safeMovies = data.data.filter(
           (movie: IMovie) => !movie.rating?.startsWith("R")
         );
@@ -51,7 +64,8 @@ function App() {
     };
 
     fetchAnimeMovies();
-  }, [currentPage, searchTerm]);
+  }, [currentPage, debouncedSearchTerm]);
+
 
 
   return (
