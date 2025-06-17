@@ -9,39 +9,45 @@ function App() {
   const [animeMovies, setAnimeMovies] = useState<IMovie[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isloading, setIsloading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
 
   const errRef = useRef<HTMLDivElement>(null); // Optional typing
 
 
   useEffect(() => {
-  const fetchAnimeMovies = async () => {
-    try {
-      const res = await fetch("https://api.jikan.moe/v4/anime?type=movie");
+    const fetchAnimeMovies = async () => {
+      try {
+        setIsloading(true); // Set loading before fetch
 
-      if (!res.ok) {
-        throw new Error(`HTTP error! Status: ${res.status}`);
+        const res = await fetch(`https://api.jikan.moe/v4/anime?type=movie&page=${currentPage}`);
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        console.log(data);
+
+        // Filter out R and R+ movies
+        const safeMovies = data.data.filter((movie: IMovie) =>
+          !movie.rating?.startsWith("R") && !movie.title.includes("Slayers")
+        );
+
+        setAnimeMovies(safeMovies);
+        setHasNextPage(data.pagination?.has_next_page); // Update next page flag
+      } catch (err: any) {
+        console.error(err);
+        setErrorMessage(err.message || "Something went wrong");
+        errRef.current?.focus();
+      } finally {
+        setIsloading(false);
       }
+    };
 
-      const data = await res.json();
-      console.log(data);
+    fetchAnimeMovies();
+  }, [currentPage]); // ⬅ Trigger on currentPage change
 
-      // ✅ Filter out R and R+ rated movies
-      const safeMovies = data.data.filter((movie: IMovie) =>
-        !movie.rating?.startsWith("R")
-      );
-
-      setAnimeMovies(safeMovies);
-    } catch (err: any) {
-      console.error(err);
-      setErrorMessage(err.message || "Something went wrong");
-      errRef.current?.focus();
-    } finally {
-      setIsloading(false);
-    }
-  };
-
-  fetchAnimeMovies();
-}, []);
 
   return (
     <main>
@@ -55,7 +61,7 @@ function App() {
 
         <section className='all-movies'>
           <h2>All Movies</h2>
-          {isloading ? "Loading..." :
+          {isloading ? <p className='text-white'>Loading...</p> :
             <>
               {errorMessage ? <p className='text-red-500' ref={errRef}>Error message: {errorMessage}</p> : null}
               {
@@ -65,6 +71,23 @@ function App() {
                   ))
                   : null
               }
+              <div className="flex justify-center gap-4 mt-6">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-40"
+                >
+                  Previous
+                </button>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  disabled={!hasNextPage}
+                  className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
             </>
           }
         </section>
