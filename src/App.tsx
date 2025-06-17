@@ -3,6 +3,7 @@ import './App.css'
 import Search from './components/search/search'
 import Movie from './components/movie/movie';
 import type { IMovie } from './interfaces/Imovie';
+import { useDebounce } from 'react-use';
 
 function App() {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -15,18 +16,7 @@ function App() {
 
   const errRef = useRef<HTMLDivElement>(null); // Optional typing
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500); // ⏱ 0.5 seconds debounce
-
-    // Cleanup timeout if user types again before 500ms
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchTerm]);
-
-
+  useDebounce(() => {setDebouncedSearchTerm(searchTerm)}, 500, [searchTerm])
 
   useEffect(() => {
     const fetchAnimeMovies = async () => {
