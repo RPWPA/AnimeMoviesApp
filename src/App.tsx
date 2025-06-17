@@ -18,9 +18,14 @@ function App() {
   useEffect(() => {
     const fetchAnimeMovies = async () => {
       try {
-        setIsloading(true); // Set loading before fetch
+        setIsloading(true);
 
-        const res = await fetch(`https://api.jikan.moe/v4/anime?type=movie&page=${currentPage}`);
+        // 🔍 If there's a search term, use it in the query
+        const searchQuery = searchTerm ? `&q=${encodeURIComponent(searchTerm)}` : "";
+
+        const res = await fetch(
+          `https://api.jikan.moe/v4/anime?type=movie&page=${currentPage}${searchQuery}`
+        );
 
         if (!res.ok) {
           throw new Error(`HTTP error! Status: ${res.status}`);
@@ -29,13 +34,13 @@ function App() {
         const data = await res.json();
         console.log(data);
 
-        // Filter out R and R+ movies
-        const safeMovies = data.data.filter((movie: IMovie) =>
-          !movie.rating?.startsWith("R") && !movie.title.includes("Slayers")
+        // 🚫 Filter out R and R+ movies
+        const safeMovies = data.data.filter(
+          (movie: IMovie) => !movie.rating?.startsWith("R")
         );
 
         setAnimeMovies(safeMovies);
-        setHasNextPage(data.pagination?.has_next_page); // Update next page flag
+        setHasNextPage(data.pagination?.has_next_page);
       } catch (err: any) {
         console.error(err);
         setErrorMessage(err.message || "Something went wrong");
@@ -46,7 +51,7 @@ function App() {
     };
 
     fetchAnimeMovies();
-  }, [currentPage]); // ⬅ Trigger on currentPage change
+  }, [currentPage, searchTerm]);
 
 
   return (

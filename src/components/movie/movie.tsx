@@ -36,7 +36,7 @@ const Movie = ({ movie }: MovieProps) => {
         </div>
 
         <p className="text-sm text-gray-300 mt-2">
-          {movie.synopsis.length > 200
+          {movie.synopsis?.length > 200
             ? movie.synopsis.slice(0, 200) + "..."
             : movie.synopsis}
         </p>
