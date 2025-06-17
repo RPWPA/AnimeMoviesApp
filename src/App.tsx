@@ -11,19 +11,26 @@ function App() {
 
   const errRef = useRef<HTMLDivElement>(null); // Optional typing
 
-  useEffect(() => {
-    fetch("https://api.jikan.moe/v4/anime?type=movie")
-      .then(res => res.json())
-      .then(data => {
-        console.log(data.data);
-        setAnimeMovies(data.data);
-      })
-      .catch(err => {
-        console.log(err);
-        setErrorMessage(err.message)
-        errRef.current?.focus()
-      })
-  }, [])
+useEffect(() => {
+  const fetchAnimeMovies = async () => {
+    try {
+      const res = await fetch("https://api.jikan.moe/v4/anime?type=movie");
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setAnimeMovies(data.data);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage(err.message || "Something went wrong");
+      errRef.current?.focus();
+    }
+  };
+
+  fetchAnimeMovies();
+}, []);
 
   return (
     <main>
@@ -34,15 +41,18 @@ function App() {
           <h1>Find your favorite anime <span className='text-gradient'>movies</span></h1>
         </header>
         <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-        <h1>{searchTerm}</h1>
-        {errorMessage ? <div ref={errRef}>Error message: {errorMessage}</div> : null}
-        {
-          animeMovies.length > 0
-            ? animeMovies.map(movie => (
-              <Movie key={movie.title} movie={movie} />
-            ))
-            : null
-        }
+
+        <section className='all-movies'>
+          <h2>All Movies</h2>
+          {errorMessage ? <p className='text-red-500' ref={errRef}>Error message: {errorMessage}</p> : null}
+          {
+            animeMovies.length > 0
+              ? animeMovies.map(movie => (
+                <Movie key={movie.title} movie={movie} />
+              ))
+              : null
+          }
+        </section>
       </div>
     </main>
   )
