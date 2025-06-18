@@ -1,9 +1,8 @@
 interface ISearchProps {
-    searchTerm: string;
     setSearchTerm: any;
 }
 
-const Search = ({ searchTerm, setSearchTerm }: ISearchProps) => {
+const Search = ({ setSearchTerm }: ISearchProps) => {
     return (
         <div className="search">
             <div>

@@ -90,7 +90,7 @@ function App() {
           <img src="./hero.png" alt='hero image' />
           <h1>Find your favorite anime <span className='text-gradient'>movies</span></h1>
         </header>
-        <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        <Search setSearchTerm={setSearchTerm} />
 
         <section className='error-message'>
           {errorMessage ? <p className='text-red-500' ref={errRef}>Error message: {errorMessage}</p> : null}
