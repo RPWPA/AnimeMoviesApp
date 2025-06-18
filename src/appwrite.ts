@@ -11,6 +11,17 @@ const client = new Client()
 
 const database = new Databases(client);
 
+export const fetchTrendingMovies = async () => {
+    try {
+      const result = await database.listDocuments(Database_ID, Metrics_ID, [Query.orderDesc("count"), Query.limit(5)]);
+      return result.documents;
+    }
+    catch (err: any) {
+      console.error(err);
+      return err;
+    }
+  }
+
 export const updateSearchCount = async (searchTerm: string, movie: IMovie) => {
     try {
         const result = await database.listDocuments(Database_ID, Metrics_ID, [Query.equal("searchTerm", searchTerm)]);

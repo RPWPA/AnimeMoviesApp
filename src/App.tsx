@@ -4,11 +4,14 @@ import Search from './components/search/search'
 import Movie from './components/movie/movie';
 import type { IMovie } from './interfaces/Imovie';
 import { useDebounce } from 'react-use';
-import { updateSearchCount } from './appwrite';
+import { fetchTrendingMovies, updateSearchCount } from './appwrite';
+import type { ITrendingMovie } from './interfaces/ITrendingMovie';
+import TrendingMovie from './components/movie/trendingMovie';
 
 function App() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [animeMovies, setAnimeMovies] = useState<IMovie[]>([]);
+  const [trendingAnimeMovies, setTrendingAnimeMovies] = useState<ITrendingMovie[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isloading, setIsloading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,48 +21,60 @@ function App() {
   const errRef = useRef<HTMLDivElement>(null); // Optional typing
 
   useDebounce(() => {setDebouncedSearchTerm(searchTerm)}, 500, [searchTerm])
+  
+  const fetchAnimeMovies = async () => {
+    try {
+      setIsloading(true);
+
+      const searchQuery = debouncedSearchTerm
+        ? `&q=${encodeURIComponent(debouncedSearchTerm)}`
+        : "";
+
+      const res = await fetch(
+        `https://api.jikan.moe/v4/anime?type=movie&page=${currentPage}${searchQuery}`
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      const safeMovies = data.data.filter(
+        (movie: IMovie) => !movie.rating?.startsWith("R")
+      );
+
+      setAnimeMovies(safeMovies);
+      setHasNextPage(data.pagination?.has_next_page);
+      // save trending movie
+      if(searchTerm && data.data?.length > 0){
+        updateSearchCount(searchTerm, safeMovies[0]);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMessage(err.message || "Something went wrong");
+      errRef.current?.focus();
+    } finally {
+      setIsloading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAnimeMovies = async () => {
-      try {
-        setIsloading(true);
-
-        const searchQuery = debouncedSearchTerm
-          ? `&q=${encodeURIComponent(debouncedSearchTerm)}`
-          : "";
-
-        const res = await fetch(
-          `https://api.jikan.moe/v4/anime?type=movie&page=${currentPage}${searchQuery}`
-        );
-
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-
-        const data = await res.json();
-        const safeMovies = data.data.filter(
-          (movie: IMovie) => !movie.rating?.startsWith("R")
-        );
-
-        setAnimeMovies(safeMovies);
-        setHasNextPage(data.pagination?.has_next_page);
-        // save trending movie
-        if(searchTerm && data.data?.length > 0){
-          updateSearchCount(searchTerm, safeMovies[0]);
-        }
-      } catch (err: any) {
-        console.error(err);
-        setErrorMessage(err.message || "Something went wrong");
-        errRef.current?.focus();
-      } finally {
-        setIsloading(false);
-      }
-    };
-
     fetchAnimeMovies();
   }, [currentPage, debouncedSearchTerm]);
 
+  const getTrendingMovies = async () => {
+    try{
+      const trendingMovies: ITrendingMovie[] = await fetchTrendingMovies();
+      setTrendingAnimeMovies(trendingMovies);
+    }
+    catch (err: any) {
+      console.error(err);
+    }
+  }
 
+  useEffect(() => {
+    getTrendingMovies();
+  }, []);
 
   return (
     <main>
@@ -71,6 +86,16 @@ function App() {
         </header>
         <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
+        <section className='trending-movies'>
+          <h2>Trending Movies</h2>
+          {
+            trendingAnimeMovies.length > 0
+              ? trendingAnimeMovies.map(movie => (
+                <TrendingMovie key={movie.title} trendingMovie={movie} />
+              ))
+              : <></>
+          }
+        </section>
         <section className='all-movies'>
           <h2>All Movies</h2>
           {isloading ? <p className='text-white'>Loading...</p> :
