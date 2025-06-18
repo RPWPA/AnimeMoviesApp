@@ -4,6 +4,7 @@ import Search from './components/search/search'
 import Movie from './components/movie/movie';
 import type { IMovie } from './interfaces/Imovie';
 import { useDebounce } from 'react-use';
+import { updateSearchCount } from './appwrite';
 
 function App() {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -36,14 +37,16 @@ function App() {
         }
 
         const data = await res.json();
-        console.log(data);
-
         const safeMovies = data.data.filter(
           (movie: IMovie) => !movie.rating?.startsWith("R")
         );
 
         setAnimeMovies(safeMovies);
         setHasNextPage(data.pagination?.has_next_page);
+        // save trending movie
+        if(searchTerm && data.data?.length > 0){
+          updateSearchCount(searchTerm, safeMovies[0]);
+        }
       } catch (err: any) {
         console.error(err);
         setErrorMessage(err.message || "Something went wrong");
