@@ -20,8 +20,8 @@ function App() {
 
   const errRef = useRef<HTMLDivElement>(null); // Optional typing
 
-  useDebounce(() => {setDebouncedSearchTerm(searchTerm)}, 500, [searchTerm])
-  
+  useDebounce(() => { setDebouncedSearchTerm(searchTerm) }, 500, [searchTerm])
+
   const fetchAnimeMovies = async () => {
     try {
       setIsloading(true);
@@ -46,7 +46,7 @@ function App() {
       setAnimeMovies(safeMovies);
       setHasNextPage(data.pagination?.has_next_page);
       // save trending movie
-      if(searchTerm && data.data?.length > 0){
+      if (searchTerm && data.data?.length > 0) {
         updateSearchCount(searchTerm, safeMovies[0]);
       }
     } catch (err: any) {
@@ -63,7 +63,7 @@ function App() {
   }, [currentPage, debouncedSearchTerm]);
 
   const getTrendingMovies = async () => {
-    try{
+    try {
       const trendingMovies: ITrendingMovie[] = await fetchTrendingMovies();
       setTrendingAnimeMovies(trendingMovies);
     }
@@ -86,16 +86,17 @@ function App() {
         </header>
         <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
-        <section className='trending-movies'>
-          <h2>Trending Movies</h2>
-          {
-            trendingAnimeMovies.length > 0
-              ? trendingAnimeMovies.map(movie => (
-                <TrendingMovie key={movie.title} trendingMovie={movie} />
-              ))
-              : <></>
-          }
+        <section className="trending-movies flex flex-col items-center gap-8 py-10">
+          <h2 className="text-white text-2xl font-bold">Trending Movies</h2>
+          <div className="flex gap-10">
+            {trendingAnimeMovies.length > 0 &&
+              trendingAnimeMovies.map((movie, index) => (
+                <TrendingMovie key={movie.title} trendingMovie={movie} index={index} />
+              ))}
+          </div>
         </section>
+
+
         <section className='all-movies'>
           <h2>All Movies</h2>
           {isloading ? <p className='text-white'>Loading...</p> :
