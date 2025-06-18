@@ -13,7 +13,8 @@ function App() {
   const [animeMovies, setAnimeMovies] = useState<IMovie[]>([]);
   const [trendingAnimeMovies, setTrendingAnimeMovies] = useState<ITrendingMovie[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [isloading, setIsloading] = useState<boolean>(true);
+  const [areAllMoviesloading, setAreAllMoviesloading] = useState<boolean>(true);
+  const [areTrendingMoviesLoading, setAreTrendingMoviesLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
@@ -24,7 +25,7 @@ function App() {
 
   const fetchAnimeMovies = async () => {
     try {
-      setIsloading(true);
+      setAreAllMoviesloading(true);
 
       const searchQuery = debouncedSearchTerm
         ? `&q=${encodeURIComponent(debouncedSearchTerm)}`
@@ -54,7 +55,7 @@ function App() {
       setErrorMessage(err.message || "Something went wrong");
       errRef.current?.focus();
     } finally {
-      setIsloading(false);
+      setAreAllMoviesloading(false);
     }
   };
 
@@ -63,12 +64,16 @@ function App() {
   }, [currentPage, debouncedSearchTerm]);
 
   const getTrendingMovies = async () => {
+    setAreTrendingMoviesLoading(true);
     try {
       const trendingMovies: ITrendingMovie[] = await fetchTrendingMovies();
       setTrendingAnimeMovies(trendingMovies);
     }
     catch (err: any) {
       console.error(err);
+    }
+    finally {
+      setAreTrendingMoviesLoading(false);
     }
   }
 
@@ -87,19 +92,23 @@ function App() {
         <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
         <section className="trending-movies flex flex-col items-center gap-8 py-10">
-          <h2 className="text-white text-2xl font-bold">Trending Movies</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 md:gap-8 lg:gap-10 w-full">
-            {trendingAnimeMovies.length > 0 &&
-              trendingAnimeMovies.map((movie, index) => (
-                <TrendingMovie key={movie.title} trendingMovie={movie} index={index} />
-              ))}
-          </div>
+          {areTrendingMoviesLoading ? <p className='text-white'>Loading...</p> :
+            <>
+              <h2 className="text-white text-2xl font-bold">Trending Movies</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 md:gap-8 lg:gap-10 w-full">
+                {trendingAnimeMovies.length > 0 &&
+                  trendingAnimeMovies.map((movie, index) => (
+                    <TrendingMovie key={movie.title} trendingMovie={movie} index={index} />
+                  ))}
+              </div>
+            </>
+          }
         </section>
 
 
         <section className='all-movies'>
           <h2>All Movies</h2>
-          {isloading ? <p className='text-white'>Loading...</p> :
+          {areAllMoviesloading ? <p className='text-white'>Loading...</p> :
             <>
               {errorMessage ? <p className='text-red-500' ref={errRef}>Error message: {errorMessage}</p> : null}
               {
