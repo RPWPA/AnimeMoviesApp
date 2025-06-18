@@ -71,6 +71,7 @@ function App() {
     }
     catch (err: any) {
       console.error(err);
+      setErrorMessage(err.message || "Something went wrong");
     }
     finally {
       setAreTrendingMoviesLoading(false);
@@ -91,6 +92,10 @@ function App() {
         </header>
         <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
+        <section className='error-message'>
+          {errorMessage ? <p className='text-red-500' ref={errRef}>Error message: {errorMessage}</p> : null}
+        </section>
+
         <section className="trending-movies flex flex-col items-center gap-8 py-10">
           {areTrendingMoviesLoading ? <p className='text-white'>Loading...</p> :
             <>
@@ -110,7 +115,6 @@ function App() {
           <h2>All Movies</h2>
           {areAllMoviesloading ? <p className='text-white'>Loading...</p> :
             <>
-              {errorMessage ? <p className='text-red-500' ref={errRef}>Error message: {errorMessage}</p> : null}
               {
                 animeMovies.length > 0
                   ? animeMovies.map(movie => (
