@@ -88,7 +88,7 @@ function App() {
 
         <section className="trending-movies flex flex-col items-center gap-8 py-10">
           <h2 className="text-white text-2xl font-bold">Trending Movies</h2>
-          <div className="flex gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 md:gap-8 lg:gap-10 w-full">
             {trendingAnimeMovies.length > 0 &&
               trendingAnimeMovies.map((movie, index) => (
                 <TrendingMovie key={movie.title} trendingMovie={movie} index={index} />
